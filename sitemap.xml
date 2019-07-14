@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/</loc>
+    
+    <lastmod>2019-07-14T17:38:50.247Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://carlory.github.io/Search/index.html</loc>
     
     <lastmod>2019-06-20T13:17:16.365Z</lastmod>
@@ -26,20 +33,6 @@
     <loc>https://carlory.github.io/about/index.html</loc>
     
     <lastmod>2019-06-20T12:49:03.224Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://carlory.github.io/2019/06/20/Installing-harbor-v1-8-0-on-redhat-7-6/</loc>
-    
-    <lastmod>2019-06-20T12:22:16.647Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://carlory.github.io/demo/index.html</loc>
-    
-    <lastmod>2019-06-20T10:39:37.072Z</lastmod>
     
   </url>
   

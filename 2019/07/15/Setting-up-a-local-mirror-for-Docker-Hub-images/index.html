@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="环境准备实施环境   角色 主机 配置 备注     镜像加速节点 192.168.2.79 1. /data/registry目录300G的存储2. 机器配置4核8G3. 开放端口为443 此节点用来部署docker-registry容器，提供镜像加速的功能。对外访问的域名为mirror.regsitry.pelican.local    代理  http://192.168.2.30:8080">
+<meta name="keywords" content="registry">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Setting up a local mirror for Docker Hub images">
+<meta property="og:url" content="https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/index.html">
+<meta property="og:site_name" content="帝夋">
+<meta property="og:description" content="环境准备实施环境   角色 主机 配置 备注     镜像加速节点 192.168.2.79 1. /data/registry目录300G的存储2. 机器配置4核8G3. 开放端口为443 此节点用来部署docker-registry容器，提供镜像加速的功能。对外访问的域名为mirror.regsitry.pelican.local    代理  http://192.168.2.30:8080">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-07-14T17:38:50.247Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Setting up a local mirror for Docker Hub images">
+<meta name="twitter:description" content="环境准备实施环境   角色 主机 配置 备注     镜像加速节点 192.168.2.79 1. /data/registry目录300G的存储2. 机器配置4核8G3. 开放端口为443 此节点用来部署docker-registry容器，提供镜像加速的功能。对外访问的域名为mirror.regsitry.pelican.local    代理  http://192.168.2.30:8080">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>Setting up a local mirror for Docker Hub images</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+</head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a href="http://github.com/carlory">Projects</a></li>
+         
+          <li><a href="/Search/">Search</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&text=Setting up a local mirror for Docker Hub images"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&title=Setting up a local mirror for Docker Hub images"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&is_video=false&description=Setting up a local mirror for Docker Hub images"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Setting up a local mirror for Docker Hub images&body=Check out this article: https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&title=Setting up a local mirror for Docker Hub images"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&title=Setting up a local mirror for Docker Hub images"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&title=Setting up a local mirror for Docker Hub images"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&title=Setting up a local mirror for Docker Hub images"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&name=Setting up a local mirror for Docker Hub images&description="><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#环境准备"><span class="toc-number">1.</span> <span class="toc-text">环境准备</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#实施环境"><span class="toc-number">1.1.</span> <span class="toc-text">实施环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#环境检查"><span class="toc-number">1.2.</span> <span class="toc-text">环境检查</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#检查节点的系统配置"><span class="toc-number">1.2.1.</span> <span class="toc-text">检查节点的系统配置</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#检查存储镜像的目录容量"><span class="toc-number">1.2.1.1.</span> <span class="toc-text">检查存储镜像的目录容量</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#检查CPU和内存的配置"><span class="toc-number">1.2.1.2.</span> <span class="toc-text">检查CPU和内存的配置</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#检查443端口是否被占用"><span class="toc-number">1.2.1.3.</span> <span class="toc-text">检查443端口是否被占用</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#检查yum源"><span class="toc-number">1.2.1.4.</span> <span class="toc-text">检查yum源</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#检查代理"><span class="toc-number">1.2.1.5.</span> <span class="toc-text">检查代理</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实施步骤"><span class="toc-number">2.</span> <span class="toc-text">实施步骤</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#安装软件"><span class="toc-number">2.1.</span> <span class="toc-text">安装软件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建数据目录"><span class="toc-number">2.2.</span> <span class="toc-text">创建数据目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#拷贝证书"><span class="toc-number">2.3.</span> <span class="toc-text">拷贝证书</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置环境变量"><span class="toc-number">2.4.</span> <span class="toc-text">配置环境变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置docker-compose-yaml文件"><span class="toc-number">2.5.</span> <span class="toc-text">配置docker-compose.yaml文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#部署容器"><span class="toc-number">2.6.</span> <span class="toc-text">部署容器</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#部署验证"><span class="toc-number">3.</span> <span class="toc-text">部署验证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#更新dockerd配置，并使配置生效"><span class="toc-number">3.1.</span> <span class="toc-text">更新dockerd配置，并使配置生效</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#拉取busybox镜像，进行验证"><span class="toc-number">3.2.</span> <span class="toc-text">拉取busybox镜像，进行验证</span></a></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Setting up a local mirror for Docker Hub images
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">帝夋</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2019-07-14T16:21:07.000Z" itemprop="datePublished">2019-07-15</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/registry/">registry</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><h3 id="实施环境"><a href="#实施环境" class="headerlink" title="实施环境"></a>实施环境</h3><table>
+<thead>
+<tr>
+<th align="left">角色</th>
+<th align="left">主机</th>
+<th align="left">配置</th>
+<th align="left">备注</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">镜像加速节点</td>
+<td align="left">192.168.2.79</td>
+<td align="left">1. /data/registry目录300G的存储<br>2. 机器配置4核8G<br>3. 开放端口为443</td>
+<td align="left">此节点用来部署docker-registry容器，提供镜像加速的功能。对外访问的域名为mirror.regsitry.pelican.local</td>
+<td></td>
+</tr>
+<tr>
+<td align="left">代理</td>
+<td align="left"></td>
+<td align="left"><a href="http://192.168.2.30:8080" target="_blank" rel="noopener">http://192.168.2.30:8080</a></td>
+<td align="left">企业内网环境下，出于安全方面的考虑，数据中心只能通过代理才可以访问到外部网络。通过此代理可以访问到以下域名：<br>1. registry-1.docker.io:443<br>2. auth.docker.io:443<br>3. production.cloudflare.docker.com:443</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="环境检查"><a href="#环境检查" class="headerlink" title="环境检查"></a>环境检查</h3><h4 id="检查节点的系统配置"><a href="#检查节点的系统配置" class="headerlink" title="检查节点的系统配置"></a>检查节点的系统配置</h4><h5 id="检查存储镜像的目录容量"><a href="#检查存储镜像的目录容量" class="headerlink" title="检查存储镜像的目录容量"></a>检查存储镜像的目录容量</h5><p>执行下面命令，检查/data/registry目录的容量大小，期望容量为300G。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">df -h</span><br></pre></td></tr></table></figure>
+
+<h5 id="检查CPU和内存的配置"><a href="#检查CPU和内存的配置" class="headerlink" title="检查CPU和内存的配置"></a>检查CPU和内存的配置</h5><p>执行下面命令，检查CPU和内存的配置，期望配置为4核8G。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lscpu</span><br><span class="line">free -mh</span><br></pre></td></tr></table></figure>
+
+<h5 id="检查443端口是否被占用"><a href="#检查443端口是否被占用" class="headerlink" title="检查443端口是否被占用"></a>检查443端口是否被占用</h5><p>执行下面命令，查看端口占用情况，期望结果为443端口未被占用。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ss -lnp | grep 443</span><br></pre></td></tr></table></figure>
+
+<h5 id="检查yum源"><a href="#检查yum源" class="headerlink" title="检查yum源"></a>检查yum源</h5><p>执行下面命令，查看yum源是否可以安装docker。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum list | grep docker</span><br></pre></td></tr></table></figure>
+
+<h5 id="检查代理"><a href="#检查代理" class="headerlink" title="检查代理"></a>检查代理</h5><p>执行下面命令，检查通过提供的代理，是否可以访问下面域名：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 设置代理（当前shell生效）</span><br><span class="line">export http_proxy=http://192.168.2.30:8080</span><br><span class="line">export https_proxy=http://192.168.2.30:8080</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 检查在内网环境下，外部域名和端口是否可以访问</span><br><span class="line">curl -I https://registry-1.docker.io</span><br><span class="line">curl -I https://auth.docker.io</span><br><span class="line">curl -I https://production.cloudflare.docker.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 清除代理（当前shell）</span><br><span class="line">unset http_proxy</span><br><span class="line">unset https_proxy</span><br></pre></td></tr></table></figure>
+
+<h2 id="实施步骤"><a href="#实施步骤" class="headerlink" title="实施步骤"></a>实施步骤</h2><p>由于实施环境为网内，无法访问外网，需事先下载好安装包，并将安装包导入到镜像加速节点上。下面列举一下，离线安装包的文件组织结构。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── bin</span><br><span class="line">│   └── docker-compose</span><br><span class="line">├── config</span><br><span class="line">│   └── mirror</span><br><span class="line">│       ├── cert</span><br><span class="line">│       │   ├── mirror.registry.pelican.local.key</span><br><span class="line">│       │   ├── mirror.registry.pelican.local.crt</span><br><span class="line">│       └── mirror_env</span><br><span class="line">├── docker-compose.yaml</span><br><span class="line">├── images</span><br><span class="line">│   └── docker-registry-v2.tar</span><br></pre></td></tr></table></figure>
+
+<h3 id="安装软件"><a href="#安装软件" class="headerlink" title="安装软件"></a>安装软件</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 安装docker</span><br><span class="line">yum install docker</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 设置开机自启并启动docker</span><br><span class="line">systemctl enable docker</span><br><span class="line">systemctl start docker</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 安装docker-compose（拷贝提前下好的docker-compose文件至$PATH目录下）</span><br><span class="line">cp bin/docker-compose /usr/bin/docker-compose</span><br><span class="line">chmod a+x /usr/bin/docker-compose</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建数据目录"><a href="#创建数据目录" class="headerlink" title="创建数据目录"></a>创建数据目录</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 存放镜像</span><br><span class="line">mkdir -p /data/registry</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 存放证书</span><br><span class="line">mkdir -p /data/cert</span><br></pre></td></tr></table></figure>
+
+<h3 id="拷贝证书"><a href="#拷贝证书" class="headerlink" title="拷贝证书"></a>拷贝证书</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cp config/mirror/cert/mirror.registry.pelican.local.key /data/cert/mirror.registry.pelican.local.key</span><br><span class="line">cp config/mirror/cert/mirror.registry.pelican.local.crt /data/cert/mirror.registry.pelican.local.crt</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置环境变量"><a href="#配置环境变量" class="headerlink" title="配置环境变量"></a>配置环境变量</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io</span><br><span class="line">REGISTRY_HTTP_ADDR=0.0.0.0:443</span><br><span class="line">REGISTRY_HTTP_TLS_CERTIFICATE=/etc/cert/server.crt</span><br><span class="line">REGISTRY_HTTP_TLS_KEY=/etc/cert/server.key</span><br><span class="line">http_proxy=http://192.168.2.30:8080</span><br><span class="line">https_proxy=http://192.168.2.30:8080</span><br><span class="line">no_proxy=localhost,127.0.0.1</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置docker-compose-yaml文件"><a href="#配置docker-compose-yaml文件" class="headerlink" title="配置docker-compose.yaml文件"></a>配置docker-compose.yaml文件</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">'2.3'</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line"><span class="attr">  mirror:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">registry:2</span></span><br><span class="line"><span class="attr">    container_name:</span> <span class="string">mirror-registry</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">/data/registry:/var/lib/registry:z</span></span><br><span class="line"><span class="attr">    - type:</span> <span class="string">bind</span></span><br><span class="line"><span class="attr">      source:</span> <span class="string">/data/cert/mirror.registry.pelican.local.key</span></span><br><span class="line"><span class="attr">      target:</span> <span class="string">/etc/cert/server.key</span></span><br><span class="line"><span class="attr">    - type:</span> <span class="string">bind</span></span><br><span class="line"><span class="attr">      source:</span> <span class="string">/data/cert/mirror.registry.pelican.local.crt</span></span><br><span class="line"><span class="attr">      target:</span> <span class="string">/etc/cert/server.crt</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="number">443</span><span class="string">:443</span></span><br><span class="line"><span class="attr">    env_file:</span></span><br><span class="line">      <span class="string">./config/mirror/mirror_env</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="部署容器"><a href="#部署容器" class="headerlink" title="部署容器"></a>部署容器</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 导入镜像</span><br><span class="line">docker load -i docker-registry-v2.tar</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 启动容器</span><br><span class="line">docker-compose up -d</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 查看状态</span><br><span class="line">watch docker-compose ps</span><br></pre></td></tr></table></figure>
+
+<h2 id="部署验证"><a href="#部署验证" class="headerlink" title="部署验证"></a>部署验证</h2><h3 id="更新dockerd配置，并使配置生效"><a href="#更新dockerd配置，并使配置生效" class="headerlink" title="更新dockerd配置，并使配置生效"></a>更新dockerd配置，并使配置生效</h3><p>在需要使用镜像加速的节点上,执行下面步骤</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 添加下面配置</span><br><span class="line">vi /etc/docker/daemon.json</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  "registry-mirrors": ["https://mirror.registry.pelican.local"],</span><br><span class="line">  "insecure-registries": ["mirror.registry.pelican.local"]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 发送信号，使配置生效</span><br><span class="line">kill -SIGHUP `pidof dockerd-current`</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 查看dockerd日志，当发现下面信息表示配置生效</span><br><span class="line">journalctl -u docker -ef</span><br><span class="line"></span><br><span class="line">level=info msg="Got signal to reload configuration, reloading from: /etc/docker/daemon.json"</span><br></pre></td></tr></table></figure>
+
+<h3 id="拉取busybox镜像，进行验证"><a href="#拉取busybox镜像，进行验证" class="headerlink" title="拉取busybox镜像，进行验证"></a>拉取busybox镜像，进行验证</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull busybox</span><br></pre></td></tr></table></figure>
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a href="http://github.com/carlory">Projects</a></li>
+         
+          <li><a href="/Search/">Search</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#环境准备"><span class="toc-number">1.</span> <span class="toc-text">环境准备</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#实施环境"><span class="toc-number">1.1.</span> <span class="toc-text">实施环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#环境检查"><span class="toc-number">1.2.</span> <span class="toc-text">环境检查</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#检查节点的系统配置"><span class="toc-number">1.2.1.</span> <span class="toc-text">检查节点的系统配置</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#检查存储镜像的目录容量"><span class="toc-number">1.2.1.1.</span> <span class="toc-text">检查存储镜像的目录容量</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#检查CPU和内存的配置"><span class="toc-number">1.2.1.2.</span> <span class="toc-text">检查CPU和内存的配置</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#检查443端口是否被占用"><span class="toc-number">1.2.1.3.</span> <span class="toc-text">检查443端口是否被占用</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#检查yum源"><span class="toc-number">1.2.1.4.</span> <span class="toc-text">检查yum源</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#检查代理"><span class="toc-number">1.2.1.5.</span> <span class="toc-text">检查代理</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实施步骤"><span class="toc-number">2.</span> <span class="toc-text">实施步骤</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#安装软件"><span class="toc-number">2.1.</span> <span class="toc-text">安装软件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建数据目录"><span class="toc-number">2.2.</span> <span class="toc-text">创建数据目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#拷贝证书"><span class="toc-number">2.3.</span> <span class="toc-text">拷贝证书</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置环境变量"><span class="toc-number">2.4.</span> <span class="toc-text">配置环境变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置docker-compose-yaml文件"><span class="toc-number">2.5.</span> <span class="toc-text">配置docker-compose.yaml文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#部署容器"><span class="toc-number">2.6.</span> <span class="toc-text">部署容器</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#部署验证"><span class="toc-number">3.</span> <span class="toc-text">部署验证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#更新dockerd配置，并使配置生效"><span class="toc-number">3.1.</span> <span class="toc-text">更新dockerd配置，并使配置生效</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#拉取busybox镜像，进行验证"><span class="toc-number">3.2.</span> <span class="toc-text">拉取busybox镜像，进行验证</span></a></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&text=Setting up a local mirror for Docker Hub images"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&title=Setting up a local mirror for Docker Hub images"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&is_video=false&description=Setting up a local mirror for Docker Hub images"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Setting up a local mirror for Docker Hub images&body=Check out this article: https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&title=Setting up a local mirror for Docker Hub images"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&title=Setting up a local mirror for Docker Hub images"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&title=Setting up a local mirror for Docker Hub images"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&title=Setting up a local mirror for Docker Hub images"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://carlory.github.io/2019/07/15/Setting-up-a-local-mirror-for-Docker-Hub-images/&name=Setting up a local mirror for Docker Hub images&description="><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2019 帝夋
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a href="http://github.com/carlory">Projects</a></li>
+         
+          <li><a href="/Search/">Search</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+    <!-- Google Analytics -->
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-142474301-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+
+    <!-- Disqus Comments -->
+    <script type="text/javascript">
+        var disqus_shortname = 'carlory-blog-comments';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+
